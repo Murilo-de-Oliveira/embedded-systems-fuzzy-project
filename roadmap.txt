@@ -1,0 +1,40 @@
+Etapas do projeto:
+  Revisão teórica sobre Lógica Fuzzy;
+  Projetar funções de pertinência adequadas para as variáveis (acredito que o ideal seria utilizar triangulares, visto que são simples e se encaixam bem na proposta);
+  Implementar motor de inferência fuzzy Mamdani;
+  Criar uma base de regras de controle;
+  Interface gráfica;
+  Validação do sistema;
+
+Ordem de implementação:
+  Backend -> Frontend -> Comunicação via MQTT;
+É necessário simular um sensor utilizando Python?
+
+Backend:
+  Definição de funções de pertinência;
+  Implementação do motor Fuzzy;
+  Regras de controle;
+  Processamento;
+  Recepção e entrega de dados;
+
+Frontend:
+  Exibição dos dados do backend (painel de saída);
+  Inserção dos dados do usuário (painel de entrada);
+  Validação (verificar se feito no frontend ou backend);
+  Painel com processo de inferência (pode ser uma tabela em algum canto que é ativada como um painelzinho);
+  Painel de controle;
+
+Comunicação via MQTT:
+  Alerta e monitoramento;
+  Conexão com broker.com:8000/mqtt;
+  Tópicos obrigatórios:
+    datacenter/fuzzy/alert
+    datacenter/fuzzy/control
+    datacenter/fuzzy/temp
+  Alertas automáticos;
+  Dashboard separado para monitoramento;
+
+Tecnologias a serem utilizadas (podem ser alteradas eventualmente):
+  Backend: Python com Pydantic (validação), UV (gerenciamento de dependências), skfuzzy (regras e lógica fuzzy), numpy (cálculos matemáticos), paho.mqtt (comunicação com broker MQTT);
+  Frontend: HTML + CSS + JavaScript (Chart.JS);
+  
