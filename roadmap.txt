@@ -8,7 +8,7 @@ Etapas do projeto:
 
 Ordem de implementação:
   Backend -> Frontend -> Comunicação via MQTT;
-É necessário simular um sensor utilizando Python?
+  Extra: Pode-se criar um script em Python para simular um sensor e enviar dados automaticamente para a aplicação, mas o uso de MQTT era, principalmente, para report de dados, não necessariamente envio de dados
 
 Backend:
   Definição de funções de pertinência;
@@ -16,6 +16,7 @@ Backend:
   Regras de controle;
   Processamento;
   Recepção e entrega de dados;
+  Pelo visto, a comunicação entre frontend e backend pode ser via HTTP;
 
 Frontend:
   Exibição dos dados do backend (painel de saída);
