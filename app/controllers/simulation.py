@@ -1,0 +1,156 @@
+import numpy as np
+import math
+from app.controllers.fuzzy_controller import FuzzyController
+from app.controllers.physical_model import modelo_fisico
+
+class DataCenterSimulation:
+    def __init__(self, setpoint=22.0):
+        self.setpoint = setpoint
+        self.sim = FuzzyController().build()
+
+    def _temp_externa_profile(self, t):
+        """
+        Senoide diária + ruído gaussiano.
+        10°C noite → 30°C tarde
+        PDF: seção 2.10.1
+        """
+        Tbase = 20
+        A = 10
+        Ts = 1440
+
+        ruido = np.random.normal(0, 0.5)
+        return Tbase + A * math.sin(2 * math.pi * t / Ts) + ruido
+
+    def _carga_termica_profile(self, t):
+        """
+        Perfil típico de Data Center:
+        - madrugada → 30–40%
+        - horário comercial → 60–80%
+        - fim do dia → 50%
+        """
+        if 0 <= t < 300:      # madrugada
+            base = 35
+        elif 300 <= t < 1000: # horário comercial
+            base = 70
+        else:                 # fim do dia
+            base = 50
+    
+        return np.clip(base + np.random.uniform(-5, 5), 0, 100)
+    
+    def run(self):
+        results = []
+
+        temp_atual = 22.0
+        erro_anterior = 0.0
+
+        #1440 minutos = 24 horas
+        for t in range(1440):
+            #Perfis externos
+            temp_externa = self._temp_externa_profile(t)
+            carga_termica = self._carga_termica_profile(t)
+
+            #Erro
+            erro = temp_atual - self.setpoint
+            delta = erro - erro_anterior
+            erro_anterior = erro
+
+            # 3. Fuzzy
+            self.sim.input['erro'] = erro
+            self.sim.input['delta_erro'] = delta
+            self.sim.input['temp_externa'] = temp_externa
+            self.sim.input['carga_termica'] = carga_termica
+
+            try:
+                self.sim.compute()
+                p_crac = self.sim.output['p_crac']
+            except:
+                p_crac = 50.0
+
+            # 4. Modelo físico
+            temp_atual = modelo_fisico(temp_atual, p_crac, carga_termica, temp_externa)
+
+            # 5. Salvar resultado
+            results.append({
+                "minuto": t,
+                "temp_atual": float(temp_atual),
+                "erro": float(erro),
+                "delta": float(delta),
+                "p_crac": float(p_crac),
+                "carga_termica": float(carga_termica),
+                "temp_externa": float(temp_externa)
+            })
+
+        return results
+    
+class DataCenterSimStep:
+    def __init__(self, setpoint=22.0):
+        self.setpoint = setpoint
+
+        # Estado interno
+        self.minuto_atual = 0
+        self.temp_atual = 22.0
+        self.erro_anterior = 0.0
+
+        # Controlador Fuzzy
+        self.sim = FuzzyController().build()
+
+    def _temp_externa_profile(self, t):
+        Tbase = 20
+        A = 10
+        Ts = 1440
+        ruido = np.random.normal(0, 0.5)
+        return Tbase + A * math.sin(2 * math.pi * t / Ts) + ruido
+
+    def _carga_termica_profile(self, t):
+        if 0 <= t < 300:
+            base = 35
+        elif 300 <= t < 1000:
+            base = 70
+        else:
+            base = 50
+        return np.clip(base + np.random.uniform(-5, 5), 0, 100)
+
+    def step(self):
+        t = self.minuto_atual
+
+        temp_externa = self._temp_externa_profile(t)
+        carga_termica = self._carga_termica_profile(t)
+
+        erro = self.temp_atual - self.setpoint
+        delta = erro - self.erro_anterior
+        self.erro_anterior = erro
+
+        # Fuzzy input
+        self.sim.input['erro'] = erro
+        self.sim.input['delta_erro'] = delta
+        self.sim.input['temp_externa'] = temp_externa
+        self.sim.input['carga_termica'] = carga_termica
+
+        try:
+            self.sim.compute()
+            p_crac = self.sim.output['p_crac']
+        except:
+            p_crac = 50.0
+
+        # Modelo físico
+        self.temp_atual = modelo_fisico(self.temp_atual, p_crac, carga_termica, temp_externa)
+
+        # Avança 1 minuto
+        self.minuto_atual += 1
+        if self.minuto_atual >= 1440:
+            self.minuto_atual = 0  # opcional: ciclo 24h
+
+        return {
+            "minuto": t,
+            "temp_atual": float(self.temp_atual),
+            "erro": float(erro),
+            "delta": float(delta),
+            "p_crac": float(p_crac),
+            "carga_termica": float(carga_termica),
+            "temp_externa": float(temp_externa)
+        }
+
+    def reset(self):
+        self.minuto_atual = 0
+        self.temp_atual = 22.0
+        self.erro_anterior = 0.0
