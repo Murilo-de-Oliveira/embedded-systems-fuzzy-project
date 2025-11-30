@@ -50,12 +50,37 @@ class FuzzyController:
         temp = self.temp_ext
         p = self.p_crac
 
-        self.regras = [
-            ctrl.Rule(erro['MP'], p['Alta']),
-            ctrl.Rule(erro['ZE'] & delta['Z'], p['Media']),
-            ctrl.Rule(erro['MN'], p['Baixa']),
-            ctrl.Rule(carga['Alta'] | temp['Quente'], p['Alta']),
-        ]
+        self.regras = []
+        # A. Temperatura no Data Center (ERRO) está muito alta:
+        self.regras.append(ctrl.Rule(erro['MP'], p['Alta'])) 
+
+        # B. Ambiente Crítico (Carga ou  Temperatura Externa altas), independente do erro atual:
+        # Se a Carga é Alta E Delta é Positivo (piorando), aumente a potência.
+        self.regras.append(ctrl.Rule(carga['Alta'] & delta['P'], p['Alta']))
+        # Se a Temp Externa é Quente E o Erro não é Negativo (não está muito frio), mantenha Alta.
+        self.regras.append(ctrl.Rule(temp['Quente'] & ~erro['MN'], p['Alta']))
+
+        # A. SETPOINT PERFEITO (ZE/ZE): Potência Média (manutenção)
+        # Mantenha a potência média para compensar a carga base.
+        self.regras.append(ctrl.Rule(erro['ZE'] & delta['Z'], p['Media']))
+
+        # B. CAINDO RÁPIDO (OVERSHOOT POTENCIAL): Reduza o resfriamento.
+        self.regras.append(ctrl.Rule(erro['ZE'] & delta['N'], p['Baixa']))
+        self.regras.append(ctrl.Rule(erro['MN'] & delta['N'], p['Baixa']))
+
+        # C. SUBINDO RÁPIDO (UNDERSHOOT POTENCIAL): Aumente o resfriamento.
+        self.regras.append(ctrl.Rule(erro['ZE'] & delta['P'], p['Media']))
+
+        # A. CENÁRIO FRIO/BAIXA CARGA (Economia de Energia)
+        # Se o erro está ZE, mas a Carga é Baixa E o Externo é Frio, podemos reduzir o resfriamento.
+        self.regras.append(ctrl.Rule(erro['ZE'] & carga['Baixa'] & temp['Fria'], p['Baixa']))
+
+        # B. CENÁRIO QUENTE/MÉDIA CARGA (Prevenção)
+        # Se o erro está ZE, mas a Carga é Média E o Externo é Quente, aumente para Média/Alta.
+        self.regras.append(ctrl.Rule(erro['ZE'] & carga['Media'] & temp['Quente'], p['Media']))
+
+        # C. BAIXA POTÊNCIA: Se a temperatura está abaixo do setpoint, desligue (MN).
+        self.regras.append(ctrl.Rule(erro['MN'], p['Baixa']))
 
     def build(self):
         self._set_membership_functions()
