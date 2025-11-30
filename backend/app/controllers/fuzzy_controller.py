@@ -2,7 +2,6 @@ import numpy as np
 import skfuzzy as fuzzy
 from skfuzzy import control as ctrl
 
-
 class FuzzyController:
     def __init__(self):
         #Variáveis de entrada
@@ -10,10 +9,10 @@ class FuzzyController:
         self.delta_erro = ctrl.Antecedent(np.arange(-5, 6, 0.1), 'delta_erro')
         self.temp_ext = ctrl.Antecedent(np.arange(10, 36, 1), 'temp_externa')
         self.carga_termica = ctrl.Antecedent(np.arange(0, 101, 1), 'carga_termica')
-        
+
         #Variáveis de saída
         self.p_crac = ctrl.Consequent(np.arange(0, 101, 1), 'p_crac')
-        
+
         #Regras
         self.regras = []
 
@@ -87,3 +86,14 @@ class FuzzyController:
         self._set_rules()
         sistema_controle = ctrl.ControlSystem(self.regras)
         return ctrl.ControlSystemSimulation(sistema_controle)
+
+    def calcular(self, erro, delta, temp_externa, carga_termica):
+        sim = self.build()
+
+        sim.input['erro'] = erro
+        sim.input['delta_erro'] = delta
+        sim.input['temp_externa'] = temp_externa
+        sim.input['carga_termica'] = carga_termica
+
+        sim.compute()
+        return float(sim.output['p_crac'])

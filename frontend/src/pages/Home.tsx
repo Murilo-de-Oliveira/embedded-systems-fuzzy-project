@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { InputPanel } from '@/components/common/InputPanel';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useControlStore } from '@/store/useControlStore';
@@ -17,28 +16,12 @@ const OutputPanel = () => {
           <h2 className="text-6xl font-extrabold text-primary">{potenciaCRAC.toFixed(1)}%</h2>
           <p className="text-sm text-muted-foreground">Potência Máxima do CRAC</p>
         </div>
-        {/* Aqui entrará o Gráfico (RF7.2) */}
       </CardContent>
     </Card>
   );
 };
 
 export default function Home() {
-  const syncWithBackend = useControlStore.getState().syncWithBackend;
-
-  useEffect(() => {
-    // sincronia imediata
-    syncWithBackend();
-
-    // atualizar a cada 1 minuto
-    const interval = setInterval(() => {
-      console.log("Sincronizando com o backend...");
-      syncWithBackend();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Painel de Controle</h1>

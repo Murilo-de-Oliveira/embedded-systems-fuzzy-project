@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { fetchCurrent } from "@/api";
 
 interface ControlState {
   error: number;
@@ -15,7 +14,6 @@ interface ControlState {
   setPotenciaCRAC: (value: number) => void;
   setExecuting: (status: boolean) => void;
   resetInputs: () => void;
-  syncWithBackend: () => Promise<void>;
 }
 
 const INITIAL_STATE = {
@@ -45,9 +43,4 @@ export const useControlStore = create<ControlState>((set) => ({
       potenciaCRAC: 0,
       isExecuting: false,
     }),
-  async syncWithBackend(){
-    const data = await fetchCurrent();
-    console.log(data);
-    set({potenciaCRAC: data.p_crac})
-  }
 }));
