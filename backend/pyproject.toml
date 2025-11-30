@@ -1,0 +1,16 @@
+[project]
+name = "embedded-systems-fuzzy-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.122.0",
+    "networkx>=3.6",
+    "numpy>=2.3.5",
+    "packaging>=25.0",
+    "pydantic>=2.12.5",
+    "scikit-fuzzy>=0.5.0",
+    "scipy>=1.16.3",
+    "uvicorn>=0.38.0",
+]
