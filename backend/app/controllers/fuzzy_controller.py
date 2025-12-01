@@ -17,69 +17,65 @@ class FuzzyController:
         self.regras = []
 
     def _set_membership_functions(self):
-        # Erro
-        self.erro['MN'] = fuzzy.trapmf(self.erro.universe, [-10, -10, -2, -0.5])
+        # ERRO: alta resolução perto de zero (zona crítica)
+        self.erro['MN'] = fuzzy.trapmf(self.erro.universe, [-10, -10, -3, -1])
+        self.erro['NS'] = fuzzy.trimf(self.erro.universe, [-3, -1.5, 0])   # negativo suave
         self.erro['ZE'] = fuzzy.trimf(self.erro.universe, [-1, 0, 1])
-        self.erro['MP'] = fuzzy.trapmf(self.erro.universe, [0.5, 2, 10, 10])
+        self.erro['PS'] = fuzzy.trimf(self.erro.universe, [0, 1.5, 3])     # positivo suave
+        self.erro['MP'] = fuzzy.trapmf(self.erro.universe, [1, 3, 10, 10]) # muito positivo
 
-        # Delta Erro
-        self.delta_erro['N'] = fuzzy.trapmf(self.delta_erro.universe, [-5, -5, -1, 0])
+        # DELTA_ERRO: prever tendência (mantive formato conservador)
+        self.delta_erro['N'] = fuzzy.trapmf(self.delta_erro.universe, [-5, -5, -1, -0.2])
         self.delta_erro['Z'] = fuzzy.trimf(self.delta_erro.universe, [-0.5, 0, 0.5])
-        self.delta_erro['P'] = fuzzy.trapmf(self.delta_erro.universe, [0, 1, 5, 5])
+        self.delta_erro['P'] = fuzzy.trapmf(self.delta_erro.universe, [0.2, 1, 5, 5])
 
-        # Temp externa
-        self.temp_ext['Fria'] = fuzzy.trimf(self.temp_ext.universe, [10, 10, 20])
-        self.temp_ext['Media'] = fuzzy.trimf(self.temp_ext.universe, [15, 22, 30])
+        # TEMP EXTERNA (suave, impacto pequeno)
+        self.temp_ext['Fria'] = fuzzy.trimf(self.temp_ext.universe, [10, 12, 18])
+        self.temp_ext['Media'] = fuzzy.trimf(self.temp_ext.universe, [15, 22, 28])
         self.temp_ext['Quente'] = fuzzy.trimf(self.temp_ext.universe, [25, 35, 35])
 
-        # Carga térmica
-        self.carga_termica['Baixa'] = fuzzy.trimf(self.carga_termica.universe, [0, 0, 40])
+        # CARGA TERMICA
+        self.carga_termica['Baixa'] = fuzzy.trimf(self.carga_termica.universe, [0, 0, 30])
         self.carga_termica['Media'] = fuzzy.trimf(self.carga_termica.universe, [20, 50, 80])
         self.carga_termica['Alta'] = fuzzy.trimf(self.carga_termica.universe, [60, 100, 100])
 
-        # Saída CRAC
-        self.p_crac['Baixa'] = fuzzy.trimf(self.p_crac.universe, [0, 0, 40])
-        self.p_crac['Media'] = fuzzy.trimf(self.p_crac.universe, [30, 50, 70])
-        self.p_crac['Alta'] = fuzzy.trimf(self.p_crac.universe, [60, 100, 100])
+        # SAIDA PCRAC (conservador: overlap maior para suavizar mudanças)
+        self.p_crac['Baixa'] = fuzzy.trimf(self.p_crac.universe, [0, 0, 35])
+        self.p_crac['Media'] = fuzzy.trimf(self.p_crac.universe, [25, 50, 75])
+        self.p_crac['Alta'] = fuzzy.trimf(self.p_crac.universe, [60, 85, 100])
 
     def _set_rules(self):
-        erro = self.erro
-        delta = self.delta_erro
-        carga = self.carga_termica
-        temp = self.temp_ext
+        e = self.erro
+        de = self.delta_erro
+        t = self.temp_ext
+        q = self.carga_termica
         p = self.p_crac
 
-        self.regras = []
-        # A. Temperatura no Data Center (ERRO) está muito alta:
-        self.regras.append(ctrl.Rule(erro['MP'], p['Alta'])) 
+        regras = []
 
-        # B. Ambiente Crítico (Carga ou  Temperatura Externa altas), independente do erro atual:
-        # Se a Carga é Alta E Delta é Positivo (piorando), aumente a potência.
-        self.regras.append(ctrl.Rule(carga['Alta'] & delta['P'], p['Alta']))
-        # Se a Temp Externa é Quente E o Erro não é Negativo (não está muito frio), mantenha Alta.
-        self.regras.append(ctrl.Rule(temp['Quente'] & ~erro['MN'], p['Alta']))
+        # Prioridade 1: Erro (mais crítico)
+        regras.append(ctrl.Rule(e['MP'], p['Alta']))
+        regras.append(ctrl.Rule(e['PS'] & de['P'], p['Alta']))   # Petit aumento + tendência positiva => reagir
+        regras.append(ctrl.Rule(e['PS'] & de['Z'], p['Media']))  # leve desvio -> média
+        regras.append(ctrl.Rule(e['ZE'] & de['P'], p['Media']))  # prever aquecimento => média
+        regras.append(ctrl.Rule(e['ZE'] & de['Z'], p['Media']))  # manutenção
+        regras.append(ctrl.Rule(e['ZE'] & de['N'], p['Baixa']))  # tendência de resfriar -> reduzir
 
-        # A. SETPOINT PERFEITO (ZE/ZE): Potência Média (manutenção)
-        # Mantenha a potência média para compensar a carga base.
-        self.regras.append(ctrl.Rule(erro['ZE'] & delta['Z'], p['Media']))
+        regras.append(ctrl.Rule(e['NS'], p['Baixa']))            # erro negativo suave -> reduzir
+        regras.append(ctrl.Rule(e['MN'], p['Baixa']))            # muito negativo -> mínimo
 
-        # B. CAINDO RÁPIDO (OVERSHOOT POTENCIAL): Reduza o resfriamento.
-        self.regras.append(ctrl.Rule(erro['ZE'] & delta['N'], p['Baixa']))
-        self.regras.append(ctrl.Rule(erro['MN'] & delta['N'], p['Baixa']))
+        # Prioridade 2: Condições externas (modulação conservadora)
+        regras.append(ctrl.Rule((q['Alta'] | t['Quente']) & e['ZE'], p['Media'])) # quando critico, não deixar em Baixa
+        regras.append(ctrl.Rule((q['Alta'] | t['Quente']) & e['PS'], p['Alta']))
 
-        # C. SUBINDO RÁPIDO (UNDERSHOOT POTENCIAL): Aumente o resfriamento.
-        self.regras.append(ctrl.Rule(erro['ZE'] & delta['P'], p['Media']))
+        # Economia de energia e continuidade
+        regras.append(ctrl.Rule(e['ZE'] & q['Baixa'] & t['Fria'], p['Baixa']))
 
-        # A. CENÁRIO FRIO/BAIXA CARGA (Economia de Energia)
-        # Se o erro está ZE, mas a Carga é Baixa E o Externo é Frio, podemos reduzir o resfriamento.
-        self.regras.append(ctrl.Rule(erro['ZE'] & carga['Baixa'] & temp['Fria'], p['Baixa']))
+        # Garantir continuidade: combinar múltiplas evidências
+        regras.append(ctrl.Rule((e['PS'] & q['Media']) | (de['P'] & q['Alta']), p['Alta']))
+        regras.append(ctrl.Rule((e['NS'] & q['Baixa']) | (de['N'] & t['Fria']), p['Baixa']))
 
-        # B. CENÁRIO QUENTE/MÉDIA CARGA (Prevenção)
-        # Se o erro está ZE, mas a Carga é Média E o Externo é Quente, aumente para Média/Alta.
-        self.regras.append(ctrl.Rule(erro['ZE'] & carga['Media'] & temp['Quente'], p['Media']))
-
-        # C. BAIXA POTÊNCIA: Se a temperatura está abaixo do setpoint, desligue (MN).
-        self.regras.append(ctrl.Rule(erro['MN'], p['Baixa']))
+        self.regras = regras
 
     def build(self):
         self._set_membership_functions()
