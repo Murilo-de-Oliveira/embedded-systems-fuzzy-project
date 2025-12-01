@@ -9,6 +9,7 @@ dependencies = [
     "networkx>=3.6",
     "numpy>=2.3.5",
     "packaging>=25.0",
+    "paho-mqtt>=2.1.0",
     "pydantic>=2.12.5",
     "scikit-fuzzy>=0.5.0",
     "scipy>=1.16.3",

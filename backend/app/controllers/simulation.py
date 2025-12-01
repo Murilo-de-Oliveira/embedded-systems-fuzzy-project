@@ -2,11 +2,14 @@ import numpy as np
 import math
 from app.controllers.fuzzy_controller import FuzzyController
 from app.controllers.physical_model import modelo_fisico
+from app.controllers.mqtt_broker import MQTTBroker
 
 class DataCenterSimulation:
     def __init__(self, setpoint=22.0):
         self.setpoint = setpoint
         self.sim = FuzzyController().build()
+        self.mqtt = MQTTBroker()
+        self.mqtt.connect()
 
     def _temp_externa_profile(self, t):
         """
@@ -68,6 +71,18 @@ class DataCenterSimulation:
 
             # 4. Modelo físico
             temp_atual = modelo_fisico(temp_atual, p_crac, carga_termica, temp_externa)
+
+            if temp_atual > 26.0:
+                msg_alerta = f"ALERTA CRITICO: Alta Temperatura {temp_atual:.2f}C"
+                self.mqtt.publish(self.mqtt.TOPIC_ALERT, msg_alerta)
+                print(f">>> {msg_alerta}")
+            elif temp_atual < 18.0:
+                msg_alerta = f"ALERTA CRITICO: Baixa Temperatura {temp_atual:.2f}C"
+                self.mqtt.publish(self.mqtt.TOPIC_ALERT, msg_alerta)
+                print(f">>> {msg_alerta}")
+
+            self.mqtt.publish(self.mqtt.TOPIC_TEMP, f"{temp_atual:.2f}")
+            self.mqtt.publish(self.mqtt.TOPIC_CONTROL, f"{p_crac:.2f}")
 
             # 5. Salvar resultado
             results.append({
