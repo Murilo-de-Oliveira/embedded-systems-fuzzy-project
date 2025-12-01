@@ -44,41 +44,37 @@ export default function MQTTMonitor() {
     });
 
     client.on("message", (topic, payloadBuffer) => {
-      const payload = payloadBuffer.toString();
+      const payloadStr = payloadBuffer.toString();
+      
       try {
-        //const parsed = JSON.parse(payload);
-        const val = Number(payload);
+        // 1. Tenta interpretar como JSON
+        const data = JSON.parse(payloadStr); 
+
         if (topic.endsWith("/temp")) {
-          const t = val;
-          if (!isNaN(t)) {
+          // O Python manda {"temp_atual": ...}
+          const t = data.temp_atual; 
+          if (typeof t === 'number') {
             setLastTemp(t);
-            setHistoryTemp((h) => [...(h.length > 600 ? h.slice(-599) : h), t]); // manter histórico limitado
+            setHistoryTemp((h) => [...(h.length > 600 ? h.slice(-599) : h), t]);
           }
-        } else if (topic.endsWith("/control")) {
-          const p = val;
-          if (typeof p === "number") {
+        } 
+        else if (topic.endsWith("/control")) {
+          // O Python manda {"p_crac": ...}
+          const p = data.p_crac;
+          if (typeof p === 'number') {
             setLastPower(p);
             setHistoryPower((h) => [...(h.length > 600 ? h.slice(-599) : h), p]);
           }
-        } else if (topic.endsWith("/alert")) {
-          const a = val ?? payload;
-          setAlerts((arr) => [typeof a === "string" ? a : JSON.stringify(a), ...arr].slice(0, 50));
-        } else {
-          // tópico desconhecido
-          console.debug("[MQTT-UI] message", topic, payload);
+        } 
+        else if (topic.endsWith("/alert")) {
+          // O Python manda {"alert": "MENSAGEM...", ...}
+          const a = data.alert || JSON.stringify(data);
+          setAlerts((arr) => [a, ...arr].slice(0, 50));
         }
       } catch (e) {
-        // payload não-JSON
-        console.debug("[MQTT-UI] payload não JSON", topic, payload);
+        console.debug("[MQTT-UI] Erro ao ler JSON", e);
       }
     });
-
-    return () => {
-      try {
-        client.end();
-      } catch {}
-      clientRef.current = null;
-    };
   }, []);
 
   return (
