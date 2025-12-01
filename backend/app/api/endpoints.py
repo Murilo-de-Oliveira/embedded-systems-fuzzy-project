@@ -10,17 +10,16 @@ router = APIRouter()
 
 #ajustar o responde model depois
 @router.get("/simulate-24h")
-def simulate_24h():
-    sim = DataCenterSimulation()
-    data = sim.run()
+def simulate_24h(mqtt: bool = False):
+    sim = DataCenterSimulation(mqtt_enabled=mqtt, mqtt_use_websocket=False)
+    results = sim.run()
 
     response = {
-        "temperature": [d["temp_atual"] for d in data],
-        "power": [d["p_crac"] for d in data],
-        "load": [d["carga_termica"] for d in data],
-        "external_temp": [d["temp_externa"] for d in data],
+        "temperature": [r["temp_atual"] for r in results],
+        "power": [r["p_crac"] for r in results],
+        "load": [r["carga_termica"] for r in results],
+        "external_temp": [r["temp_externa"] for r in results],
     }
-
     return response
 
 @router.get("/step", response_model=SimulationResult)
