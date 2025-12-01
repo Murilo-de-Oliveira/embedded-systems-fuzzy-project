@@ -11,6 +11,11 @@ class DataCenterSimulation:
         self.mqtt = MQTTBroker()
         self.mqtt.connect()
 
+        #estados após filtro
+        self.temp_ext_f = None
+        self.carga_f = None
+        self.p_crac_f = None
+
     def _temp_externa_profile(self, t):
         """
         Senoide diária + ruído gaussiano.
@@ -18,7 +23,7 @@ class DataCenterSimulation:
         PDF: seção 2.10.1
         """
         Tbase = 22
-        A = 10
+        A = 5
         Ts = 1440
 
         ruido = np.random.normal(0, 0.5)
@@ -40,6 +45,12 @@ class DataCenterSimulation:
     
         return np.clip(base + np.random.uniform(-5, 5), 0, 100)
     
+    def _filtro(self, value, filt, alpha):
+        """Filtro exponencial simples."""
+        if filt is None:
+            return value
+        return alpha * value + (1 - alpha) * filt
+
     def run(self):
         results = []
 
@@ -49,18 +60,34 @@ class DataCenterSimulation:
         #1440 minutos = 24 horas
         for t in range(1440):
             #Perfis externos
-            temp_externa = self._temp_externa_profile(t)
-            carga_termica = self._carga_termica_profile(t)
+            temp_externa_raw = self._temp_externa_profile(t)
+            carga_termica_raw = self._carga_termica_profile(t)
+
+            #temp_externa_raw = 27
+            #carga_termica_raw = 20
+
+            self.temp_ext_f = self._filtro(temp_externa_raw, self.temp_ext_f, 0.15)
+            self.carga_f = self._filtro(carga_termica_raw, self.carga_f, 0.15)
+
+            temp_externa = self.temp_ext_f
+            carga_termica = self.carga_f
 
             #Erro
             erro = temp_atual - self.setpoint
             delta = erro - erro_anterior
             erro_anterior = erro
 
-            try:
-                p_crac = self.sim.calcular(erro, delta, temp_externa, carga_termica)
-            except:
-                p_crac = 50.0
+            #try:
+            #    p_crac = self.sim.calcular(erro, delta, temp_externa, carga_termica)
+            #except:
+            #    p_crac = 50.0
+
+            p_crac_raw = self.sim.calcular(erro, delta, temp_externa, carga_termica)
+
+            self.p_crac_f = self._filtro(p_crac_raw, self.p_crac_f, 0.10)
+            p_crac = self.p_crac_f
+
+            #p_crac = self.sim.calcular(0, 0, temp_externa, carga_termica)
 
             # 4. Modelo físico
             temp_atual = modelo_fisico(temp_atual, p_crac, carga_termica, temp_externa)

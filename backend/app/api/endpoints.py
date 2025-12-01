@@ -9,11 +9,17 @@ from app.controllers.fuzzy_controller import FuzzyController
 router = APIRouter()
 
 
-@router.get("/simulate-24h", response_model=list[SimulationResult])
+@router.get("/simulate-24h", response_model=SimulationResult)
 def simulate_24h():
     sim = DataCenterSimulation()
-    result = sim.run()
-    return result
+    resultados = sim.run()
+
+    return SimulationResult(
+        temperature=[r["temp_atual"] for r in resultados],
+        power=[r["p_crac"] for r in resultados],
+        load=[r["carga_termica"] for r in resultados],
+        external_temp=[r["temp_externa"] for r in resultados],
+    )
 
 @router.get("/step", response_model=SimulationResult)
 def simulate_step(sim = Depends(get_simulation)):
@@ -30,7 +36,7 @@ def fuzzy_manual(data: FuzzyDashboardInput):
     controller = FuzzyController()
     p = controller.calcular(
         erro=data.erro,
-        delta=data.delta,
+        delta_erro=data.delta,
         temp_externa=data.temp_externa,
         carga_termica=data.carga_termica
     )
