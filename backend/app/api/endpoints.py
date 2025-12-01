@@ -8,12 +8,20 @@ from app.controllers.fuzzy_controller import FuzzyController
 
 router = APIRouter()
 
-
-@router.get("/simulate-24h", response_model=list[SimulationResult])
+#ajustar o responde model depois
+@router.get("/simulate-24h")
 def simulate_24h():
     sim = DataCenterSimulation()
-    result = sim.run()
-    return result
+    data = sim.run()
+
+    response = {
+        "temperature": [d["temp_atual"] for d in data],
+        "power": [d["p_crac"] for d in data],
+        "load": [d["carga_termica"] for d in data],
+        "external_temp": [d["temp_externa"] for d in data],
+    }
+
+    return response
 
 @router.get("/step", response_model=SimulationResult)
 def simulate_step(sim = Depends(get_simulation)):
