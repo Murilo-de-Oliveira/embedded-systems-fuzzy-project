@@ -7,7 +7,7 @@ from app.controllers.mqtt_broker import MQTTBroker
 class DataCenterSimulation:
     def __init__(self, setpoint=22.0):
         self.setpoint = setpoint
-        self.sim = FuzzyController().build()
+        self.sim = FuzzyController()
         self.mqtt = MQTTBroker()
         self.mqtt.connect()
 
@@ -17,7 +17,7 @@ class DataCenterSimulation:
         10°C noite → 30°C tarde
         PDF: seção 2.10.1
         """
-        Tbase = 20
+        Tbase = 22
         A = 10
         Ts = 1440
 
@@ -57,15 +57,8 @@ class DataCenterSimulation:
             delta = erro - erro_anterior
             erro_anterior = erro
 
-            # 3. Fuzzy
-            self.sim.input['erro'] = erro
-            self.sim.input['delta_erro'] = delta
-            self.sim.input['temp_externa'] = temp_externa
-            self.sim.input['carga_termica'] = carga_termica
-
             try:
-                self.sim.compute()
-                p_crac = self.sim.output['p_crac']
+                p_crac = self.sim.calcular(erro, delta, temp_externa, carga_termica)
             except:
                 p_crac = 50.0
 
@@ -107,7 +100,7 @@ class DataCenterSimStep:
         self.erro_anterior = 0.0
 
         # Controlador Fuzzy
-        self.sim = FuzzyController().build()
+        self.sim = FuzzyController()
 
     def _temp_externa_profile(self, t):
         Tbase = 20
