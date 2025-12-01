@@ -30,7 +30,7 @@ def fuzzy_manual(data: FuzzyDashboardInput):
     controller = FuzzyController()
     p = controller.calcular(
         erro=data.erro,
-        delta=data.delta,
+        delta_erro=data.delta,
         temp_externa=data.temp_externa,
         carga_termica=data.carga_termica
     )
