@@ -4,7 +4,9 @@ from app.api.schemas import SimulationResult
 from app.core.config import get_simulation
 from app.api.schemas import FuzzyDashboardInput
 from app.api.schemas import FuzzyDashboardOutput
+from app.api.schemas import MQTTStatus
 from app.controllers.fuzzy_controller import FuzzyController
+from app.controllers.mqtt_broker import MQTTBroker
 import matplotlib.pyplot as plt
 import io
 import base64
@@ -12,6 +14,8 @@ import matplotlib
 matplotlib.use("Agg")
 
 router = APIRouter()
+
+mqtt_broker = MQTTBroker()
 
 def fig_to_base64(fig):
     buf = io.BytesIO()
@@ -95,3 +99,8 @@ def fuzzy_manual(data: FuzzyDashboardInput):
         "carga_plot": carga_plot,
         "pcrac_plot": pcrac_plot,
     }
+
+@router.get("/mqtt/status", response_model=MQTTStatus)
+def get_mqtt_status():
+    """Retorna o status da conexão MQTT"""
+    return mqtt_broker.get_status()

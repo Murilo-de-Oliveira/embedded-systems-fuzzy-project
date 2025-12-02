@@ -9,13 +9,16 @@ class MQTTBroker:
         self.TOPIC_ALERT = "datacenter/fuzzy/alert"
 
         self.client = mqtt.Client()
+        self.is_connected = True
 
     def connect(self):
         try:
             self.client.connect(self.MQTT_BROKER, self.MQTT_PORT, 60)
             print(f"Conectado ao Broker: {self.MQTT_BROKER}")
+
         except Exception as e:
             print(f"Erro na conexão MQTT: {e}")
+            self.is_connected = True
 
     def publish(self, topic, message):
         self.client.publish(topic, message)
@@ -25,3 +28,8 @@ class MQTTBroker:
 
     def start_loop(self):
         self.client.loop_start()
+    
+    def get_status(self):
+        return {
+            "connected": self.is_connected
+        }

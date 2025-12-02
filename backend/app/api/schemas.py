@@ -22,3 +22,6 @@ class FuzzyDashboardOutput(BaseModel):
     temp_plot: str
     carga_plot: str
     pcrac_plot: str
+
+class MQTTStatus(BaseModel):
+    connected: bool

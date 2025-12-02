@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
+import { useMqttStatus } from '../../hooks/useMqttStatus';
 
 const navItems = [
   { name: 'Controle', path: '/' },
@@ -10,9 +11,17 @@ const navItems = [
 
 export const Topbar = () => {
   const location = useLocation();
-  const isMqttConnected = false;
-  const mqttStatusText = isMqttConnected ? 'Broker Online' : 'Desconectado';
-  const mqttBadgeClass = isMqttConnected
+  const { status, loading } = useMqttStatus(5000);
+
+  const mqttStatusText = loading
+    ? 'Verificando...'
+    : status.connected
+    ? 'Broker Online'
+    : 'Desconectado';
+
+  const mqttBadgeClass = loading
+    ? 'bg-gray-400 hover:bg-gray-500'
+    : status.connected
     ? 'bg-green-500 hover:bg-green-600'
     : 'bg-red-500 hover:bg-red-600';
 
@@ -26,7 +35,7 @@ export const Topbar = () => {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-          {navItems.map((item) => (
+          {navItems.map(item => (
             <Link
               key={item.path}
               to={item.path}
@@ -43,7 +52,9 @@ export const Topbar = () => {
       </div>
       <div className="flex items-center space-x-4">
         <div className="hidden sm:flex items-center space-x-2">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">Status Broker:</span>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            Status Broker:
+          </span>
           <Badge variant="default" className={mqttBadgeClass}>
             {mqttStatusText}
           </Badge>
