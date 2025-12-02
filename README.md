@@ -1,28 +1,128 @@
-# embedded-systems-fuzzy-project
-Repositório dedicado ao projeto "Sistema de Controle Fuzzy MISO para Refrigeração em Centros de Dados" da disciplina de Sistemas Embarcados (C213))
+# Embedded Systems Fuzzy Project
 
-Como executar o projeto:
-Utilizando UV (recomendado):
-    pip install uv
-    uv sync
+Repositório dedicado ao projeto **"Sistema de Controle Fuzzy MISO para Refrigeração em Centros de Dados"** da disciplina de Sistemas Embarcados (C213).
 
-Executando a API:
-    uv run uvicorn app.main:app --reload
-    A API ficará disponível em http://127.0.0.1:8000
+O objetivo é simular 24 horas de operação de um Data Center, avaliando a **estabilidade térmica** e a **eficiência do controle**.
 
-Estrutura do projeto:
-app/
- ├── api/
- │    ├── endpoints.py
- │    └── schemas.py
- ├── controllers/
- │    ├── fuzzy_controller.py
- │    ├── physical_model.py
- │    └── simulation.py
- ├── core/
- │    └── config.py
- └── main.py
+---
 
-Colaboradores:
-Murilo de Oliveira Domingos Figueiredo
-Petterson Ikaro Bento de Souza
+## Como executar o projeto
+
+### Backend (recomendado com `uv`)
+```bash
+pip install uv
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload
+```
+
+A API ficará disponível em: http://127.0.0.1:8000
+Frontend
+
+```npm run dev```
+
+O frontend ficará disponível em: http://localhost:5173/
+Arquitetura do projeto
+
+O projeto é composto por duas partes principais: Backend e Frontend.
+Backend
+
+    Tecnologias: FastAPI e Pydantic
+
+    Módulo Fuzzy Controller: Lógica fuzzy, regras e funções de pertinência.
+
+    Modelo Físico: Equação que calcula a temperatura no minuto seguinte.
+
+    Simulador de 24h: Gera resultados de 24h simuladas do refrigeramento do datacenter e envia publicações MQTT.
+
+    MQTT Broker: Classe que organiza e gerencia a implementação do protocolo MQTT.
+
+    Endpoints de API: Meio pelo qual o frontend recebe e envia os dados.
+
+Frontend
+
+    Tecnologias: React, Vite e Typescript
+
+    Tela Home: Permite calcular a potência CRAC utilizando parâmetros específicos.
+
+    Tela Membership: Mostra as funções de pertinência da classe FuzzyController.
+
+    Tela MQTT: Recebe e exibe as mensagens do broker MQTT.
+
+    Tela Simulation: Recebe dados das 24h simuladas.
+
+Fluxo Geral
+
+    O simulador calcula a temperatura minuto a minuto.
+
+    O controlador Fuzzy calcula a potência ideal do CRAC.
+
+    O modelo físico calcula a nova temperatura.
+
+    O backend publica dados via MQTT.
+
+    O frontend consome dados via API e WebSocket/MQTT.
+
+Módulo de Controle Fuzzy
+
+Entradas:
+
+    Erro: diferença entre a temperatura atual e o setpoint.
+
+    Delta Erro: variação do erro entre ciclos.
+
+    Temperatura Externa: influencia o aquecimento natural.
+
+    Carga Térmica: representa o uso computacional.
+
+Saída:
+
+    p_crac: potência do sistema de climatização (0–100%).
+
+Filtro aplicado para suavizar a resposta:
+
+```python
+def _filtro(self, value, filt, alpha):
+    """Filtro exponencial simples."""
+    if filt is None:
+        return value
+    return alpha * value + (1 - alpha) * filt
+```
+
+Modelo físico
+
+O modelo físico utilizado para predição da temperatura é:
+
+def modelo_fisico(t_atual, p_crac_val, q_est, t_ext):
+    """
+    Equação do PDF:
+    T[n+1] = 0.9*T[n] - 0.08*Pcrac + 0.05*Qest + 0.02*Text + 3.5
+    """
+    t_next = (0.9 * t_atual) - (0.08 * p_crac_val) + (0.05 * q_est) + (0.02 * t_ext) + 3.5
+    return t_next
+
+MQTT
+
+Tópicos utilizados:
+
+    /app/temperature
+
+    /app/control
+
+    /app/alert
+
+Funcionalidades do sistema
+
+    Controle fuzzy completo e estável.
+
+    Simulação térmica consistente.
+
+    Telemetria funcionando.
+
+    Dashboard analítico operacional.
+
+Colaboradores
+
+    Murilo de Oliveira Domingos Figueiredo
+
+    Petterson Ikaro Bento de Souza
