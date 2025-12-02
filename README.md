@@ -1,62 +1,98 @@
-# embedded-systems-fuzzy-project
-Repositório dedicado ao projeto "Sistema de Controle Fuzzy MISO para Refrigeração em Centros de Dados" da disciplina de Sistemas Embarcados (C213))
+# Embedded Systems Fuzzy Project
 
-O objetivo é simular 24 horas de operação de um Data Center, avaliando a estabilidade térmica e a eficiência do controle.
+Repositório dedicado ao projeto **"Sistema de Controle Fuzzy MISO para Refrigeração em Centros de Dados"** da disciplina de Sistemas Embarcados (C213).
 
-Como executar o projeto (backend):
-Utilizando UV (recomendado):
-    pip install uv
-    cd backend
-    uv sync
-    uv run uvicorn app.main:app --reload
-    A API ficará disponível em http://127.0.0.1:8000
+O objetivo é simular 24 horas de operação de um Data Center, avaliando a **estabilidade térmica** e a **eficiência do controle**.
 
-Como executar o projeto (frontend):
-    npm run dev
-    O frontend ficará disponível em http://localhost:5173/
+---
 
-Arquitetura do projeto:
-O projeto é composto por duas partes principais:
-Backend:
-Feito utilizando FastAPI e Pydantic
-Módulo Fuzzy Controller -> Possui a lógica fuzzy, juntamente com regras e funções de pertinência
-Modelo Físico -> Equação que calcula a temperatura no minuto seguinte
-Simulador de 24h -> Gera o resultado de 24h simuladas do refrigeramento do datacenter, além de enviar publicações MQTT
-MQTT Broker -> Classe que organiza e gerencia a implementação do protocolo MQTT
-Endpoints de API -> Meio pelo qual o frontend recebe e envia os dados
+## Como executar o projeto
 
-Frontend:
-Feito utilizando React, Vite e Typescript
-Tela Home -> Permite o usuário calcular a Potência CRAC utilizando parâmetros específicos
-Tela Membership -> Mostra as funções de pertinência da classe FuzzyController
-Tela MQTT -> Recebe e exibe as mensagens recebidas do broker MQTT
-Tela Simulation -> Recebe dados de 24h simuladas
+### Backend (recomendado com `uv`)
+```bash
+pip install uv
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload
+```
 
-Fluxo Geral:
-O simulador calcula temperatura minuto a minuto.
-O controlador Fuzzy calcula a potência ideal do CRAC.
-O modelo físico calcula a nova temperatura.
-Backend publica dados via MQTT.
-Frontend consome via API e WebSocket/MQTT.
+A API ficará disponível em: http://127.0.0.1:8000
+Frontend
+
+```npm run dev```
+
+O frontend ficará disponível em: http://localhost:5173/
+Arquitetura do projeto
+
+O projeto é composto por duas partes principais: Backend e Frontend.
+Backend
+
+    Tecnologias: FastAPI e Pydantic
+
+    Módulo Fuzzy Controller: Lógica fuzzy, regras e funções de pertinência.
+
+    Modelo Físico: Equação que calcula a temperatura no minuto seguinte.
+
+    Simulador de 24h: Gera resultados de 24h simuladas do refrigeramento do datacenter e envia publicações MQTT.
+
+    MQTT Broker: Classe que organiza e gerencia a implementação do protocolo MQTT.
+
+    Endpoints de API: Meio pelo qual o frontend recebe e envia os dados.
+
+Frontend
+
+    Tecnologias: React, Vite e Typescript
+
+    Tela Home: Permite calcular a potência CRAC utilizando parâmetros específicos.
+
+    Tela Membership: Mostra as funções de pertinência da classe FuzzyController.
+
+    Tela MQTT: Recebe e exibe as mensagens do broker MQTT.
+
+    Tela Simulation: Recebe dados das 24h simuladas.
+
+Fluxo Geral
+
+    O simulador calcula a temperatura minuto a minuto.
+
+    O controlador Fuzzy calcula a potência ideal do CRAC.
+
+    O modelo físico calcula a nova temperatura.
+
+    O backend publica dados via MQTT.
+
+    O frontend consome dados via API e WebSocket/MQTT.
 
 Módulo de Controle Fuzzy
+
 Entradas:
-Erro: diferença entre temperatura atual e setpoint.
-Delta Erro: variação do erro entre ciclos.
-Temperatura Externa: influencia o aquecimento natural.
-Carga Térmica: representa o uso computacional.
+
+    Erro: diferença entre a temperatura atual e o setpoint.
+
+    Delta Erro: variação do erro entre ciclos.
+
+    Temperatura Externa: influencia o aquecimento natural.
+
+    Carga Térmica: representa o uso computacional.
+
 Saída:
-p_crac: potência do sistema de climatização (0–100%).
 
-Nas simulações, foi utilizado um módulo de filtro para suavisar a resposta:
+    p_crac: potência do sistema de climatização (0–100%).
+
+Filtro aplicado para suavizar a resposta:
+
+```python
 def _filtro(self, value, filt, alpha):
-        """Filtro exponencial simples."""
-        if filt is None:
-            return value
-        return alpha * value + (1 - alpha) * filt
+    """Filtro exponencial simples."""
+    if filt is None:
+        return value
+    return alpha * value + (1 - alpha) * filt
+```
 
-Modelo físico:
-O modelo físico utilizado para realizar a predição da temperatura foi:
+Modelo físico
+
+O modelo físico utilizado para predição da temperatura é:
+
 def modelo_fisico(t_atual, p_crac_val, q_est, t_ext):
     """
     Equação do PDF:
@@ -66,17 +102,27 @@ def modelo_fisico(t_atual, p_crac_val, q_est, t_ext):
     return t_next
 
 MQTT
+
 Tópicos utilizados:
-/app/temperature
-/app/control
-/app/alert
 
-O sistema já apresenta:
-Controle fuzzy completo e estável.
-Simulação térmica consistente.
-Telemetria funcionando.
-Dashboard analítico operacional.
+    /app/temperature
 
-Colaboradores:
-Murilo de Oliveira Domingos Figueiredo
-Petterson Ikaro Bento de Souza
+    /app/control
+
+    /app/alert
+
+Funcionalidades do sistema
+
+    Controle fuzzy completo e estável.
+
+    Simulação térmica consistente.
+
+    Telemetria funcionando.
+
+    Dashboard analítico operacional.
+
+Colaboradores
+
+    Murilo de Oliveira Domingos Figueiredo
+
+    Petterson Ikaro Bento de Souza
