@@ -13,7 +13,7 @@ class FuzzyController:
         # Universos
         self.erro = ctrl.Antecedent(np.arange(-10, 10.01, 0.1), "erro")
         self.delta_erro = ctrl.Antecedent(np.arange(-3, 3.01, 0.1), "delta_erro")
-        self.temp_externa = ctrl.Antecedent(np.arange(10, 40.01, 0.1), "temp_externa")
+        self.temp_externa = ctrl.Antecedent(np.arange(10, 35.01, 0.1), "temp_externa")
         self.carga_termica = ctrl.Antecedent(np.arange(0, 100.01, 1), "carga_termica")
         self.p_crac = ctrl.Consequent(np.arange(0, 100.1, 1), "p_crac")
 
@@ -46,12 +46,12 @@ class FuzzyController:
         # TEMP EXTERNA
         t["B"] = fuzzy.trimf(t.universe, [10, 10, 20])
         t["M"] = fuzzy.trimf(t.universe, [18, 25, 30])
-        t["A"] = fuzzy.trimf(t.universe, [28, 35, 40])
+        t["A"] = fuzzy.trimf(t.universe, [28, 35, 35])
 
         # CARGA TÉRMICA
         q["B"] = fuzzy.trimf(q.universe, [0, 0, 35])
         q["M"] = fuzzy.trimf(q.universe, [25, 50, 75])
-        q["A"] = fuzzy.trimf(q.universe, [60, 80, 100])
+        q["A"] = fuzzy.trimf(q.universe, [60, 100, 100])
 
         # SAÍDA – MAIS AGRESSIVA
         p["MB"] = fuzzy.trimf(p.universe, [0, 0, 15])
