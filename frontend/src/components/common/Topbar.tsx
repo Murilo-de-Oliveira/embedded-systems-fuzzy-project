@@ -60,11 +60,15 @@ export const Topbar = () => {
           </Badge>
         </div>
 
-        <Link to="/mqtt">
+        <a
+          href="http://localhost:1880/ui"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <Button variant="secondary" size="sm">
             Acessar Logs de Alerta
           </Button>
-        </Link>
+        </a>
       </div>
     </div>
   );
