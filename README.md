@@ -48,6 +48,57 @@ Carga Térmica: representa o uso computacional.
 Saída:
 p_crac: potência do sistema de climatização (0–100%).
 
+Regras Fuzzy:
+e = erro
+de = delta do erro
+t = temperatura externa
+q = carga térmica
+p = potência CRAC
+
+Condições extremas:
+| Condição | Interpretação            | Saída  |
+| -------- | ------------------------ | ------ |
+| e = MP   | Muito acima do setpoint  | p = MA |
+| e = MN   | Muito abaixo do setpoint | p = MB |
+
+Ambiente quente:
+| Condição         | Significado Físico            | Ação |
+| ---------------- | ----------------------------- | ---- |
+| e = PS & de = SR | Quente e subindo muito rápido | MA   |
+| e = PS & de = S  | Quente e subindo              | A    |
+| e = PS & de = E  | Quente mas estável            | A    |
+| e = PS & de = C  | Quente mas caindo             | M    |
+| e = PS & de = CR | Quente mas caindo rápido      | B    |
+
+Ambiente frio:
+| Condição         | Significado Físico            | Ação |
+| ---------------- | ----------------------------- | ---- |
+| e = NS & de = CR | Frio e esfriando rápido       | MB   |
+| e = NS & de = C  | Frio e esfriando              | MB   |
+| e = NS & de = E  | Frio mas estável              | B    |
+| e = NS & de = S  | Frio e subindo                | M    |
+| e = NS & de = SR | Frio mas subindo muito rápido | A    |
+
+Carga alta e erro zero:
+| Condição       | Significado | Ação |
+| -------------- | ----------- | ---- |
+| e = ZE & q = A | Carga alta  | A    |
+| e = ZE & q = M | Carga média | M    |
+| e = ZE & q = B | Carga baixa | B    |
+
+Temperatura externa com erro zero:
+| Condição       | Significado          | Ação |
+| -------------- | -------------------- | ---- |
+| e = ZE & t = A | Externo muito quente | A    |
+| e = ZE & t = M | Externo moderado     | M    |
+| e = ZE & t = B | Externo frio         | B    |
+
+Interações críticas:
+| Condição       | Significado             | Ação |
+| -------------- | ----------------------- | ---- |
+| e = PS & q = A | Quente + carga alta     | MA   |
+| e = PS & t = A | Quente + externo quente | MA   |
+
 Nas simulações, foi utilizado um módulo de filtro para suavisar a resposta:
 def _filtro(self, value, filt, alpha):
         """Filtro exponencial simples."""
