@@ -122,7 +122,6 @@ class FuzzyController:
         try:
             return float(sim.output["p_crac"])
         except KeyError:
-            logging.warning("FuzzyController: 'p_crac' not found in sim.output. Available keys: %s", list(sim.output.keys()))
             if sim.output:
                 first_val = next(iter(sim.output.values()))
                 return float(first_val)

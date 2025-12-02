@@ -2,14 +2,14 @@ import paho.mqtt.client as mqtt
 
 class MQTTBroker:
     def __init__(self):
-        self.MQTT_BROKER = "test.mosquitto.org"
+        self.MQTT_BROKER = "localhost"
         self.MQTT_PORT = 1883
         self.TOPIC_CONTROL = "datacenter/fuzzy/control"
         self.TOPIC_TEMP = "datacenter/fuzzy/temp"
         self.TOPIC_ALERT = "datacenter/fuzzy/alert"
 
         self.client = mqtt.Client()
-    
+
     def connect(self):
         try:
             self.client.connect(self.MQTT_BROKER, self.MQTT_PORT, 60)
