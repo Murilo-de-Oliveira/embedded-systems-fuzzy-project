@@ -4,7 +4,6 @@ import { Button } from '../ui/button';
 
 const navItems = [
   { name: 'Controle', path: '/' },
-  { name: 'Inferência', path: '/inference' },
   { name: 'Pertinência', path: '/membership' },
   { name: 'Simulação', path: '/simulation' },
 ];

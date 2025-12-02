@@ -9,6 +9,12 @@ export interface FuzzyManualRequest {
 
 export interface FuzzyManualResponse {
   p_crac: number;
+  erro_plot: string;
+  delta_plot: string;
+  temp_plot: string;
+  carga_plot: string;
+  pcrac_plot: string;
+  rules_plot: string;
 }
 
 export async function calcularFuzzyManual(data: FuzzyManualRequest) {

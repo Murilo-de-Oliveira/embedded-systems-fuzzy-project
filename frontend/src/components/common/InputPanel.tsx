@@ -45,6 +45,7 @@ export const InputPanel = () => {
   const setInputValue = useControlStore((state) => state.setInputValue);
   const setPotenciaCRAC = useControlStore((state) => state.setPotenciaCRAC);
   const setExecuting = useControlStore((state) => state.setExecuting);
+  const setPlots = useControlStore((state) => state.setPlots);
 
   const resetInputs = useControlStore((state) => state.resetInputs);
   const isExecuting = useControlStore((state) => state.isExecuting);
@@ -100,6 +101,14 @@ export const InputPanel = () => {
       });
 
       setPotenciaCRAC(result.p_crac);
+
+      setPlots({
+        erro: result.erro_plot,
+        delta: result.delta_plot,
+        temp: result.temp_plot,
+        carga: result.carga_plot,
+        pcrac: result.pcrac_plot,
+      });
     } catch (err) {
       console.error('Erro ao executar cálculo fuzzy:', err);
     } finally {

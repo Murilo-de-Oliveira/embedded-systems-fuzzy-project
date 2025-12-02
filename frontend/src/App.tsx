@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './layouts/Layout';
 import Home from './pages/Home';
-import Inference from './pages/Inference';
 import Membership from './pages/Membership';
 import Simulation from './pages/Simulation';
 
@@ -14,14 +13,6 @@ function App() {
           element={
             <Layout>
               <Home />
-            </Layout>
-          }
-        />
-        <Route
-          path="/inference"
-          element={
-            <Layout>
-              <Inference />
             </Layout>
           }
         />

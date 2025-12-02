@@ -1,10 +1,13 @@
 from pydantic import BaseModel
 
 class SimulationResult(BaseModel):
-    temperature: list[float]
-    power: list[float]
-    load: list[float]
-    external_temp: list[float]
+    minuto: int
+    temp_atual: float
+    erro: float
+    delta: float
+    p_crac: float
+    carga_termica: float
+    temp_externa: float
 
 class FuzzyDashboardInput(BaseModel):
     erro: float
@@ -14,3 +17,8 @@ class FuzzyDashboardInput(BaseModel):
 
 class FuzzyDashboardOutput(BaseModel):
     p_crac: float
+    erro_plot: str
+    delta_plot: str
+    temp_plot: str
+    carga_plot: str
+    pcrac_plot: str
